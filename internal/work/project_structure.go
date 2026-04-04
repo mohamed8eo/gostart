@@ -28,10 +28,10 @@ func CreateProjectStructure(projectName, framework, db, sqlDriver string) error 
 		}
 	}
 
-	// create placeholder files
+	// create files with framework-specific content
 	files := map[string]string{
-		filepath.Join(base, "cmd", "api", "main.go"):    fmt.Sprintf("// main.go for API server (%s)\npackage main", framework),
-		filepath.Join(base, "cmd", "worker", "main.go"): "// main.go for Worker\npackage main",
+		filepath.Join(base, "cmd", "api", "main.go"):    generateMainGoContent(framework),
+		filepath.Join(base, "cmd", "worker", "main.go"): generateWorkerMainContent(),
 		filepath.Join(base, "api", "openapi.yaml"):      "# OpenAPI spec",
 		filepath.Join(base, "config", "config.yaml"):    "default: config",
 		filepath.Join(base, "scripts", "deploy.sh"):     "#!/bin/bash\necho 'Deploy script'",
@@ -47,4 +47,169 @@ func CreateProjectStructure(projectName, framework, db, sqlDriver string) error 
 
 	fmt.Println("✅ Project structure created successfully!")
 	return nil
+}
+
+func generateMainGoContent(framework string) string {
+	switch framework {
+	case "Gin":
+		return `package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"log"
+	"net/http"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status": "healthy",
+		})
+	})
+
+	// Add your routes here
+
+	log.Println("Server starting on :8080")
+	if err := r.Run(":8080"); err != nil {
+		log.Fatalf("Server failed to start: %v", err)
+	}
+}
+`
+	case "Echo":
+		return `package main
+
+import (
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"log"
+	"net/http"
+)
+
+func main() {
+	e := echo.New()
+
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+
+	e.GET("/health", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]string{
+			"status": "healthy",
+		})
+	})
+
+	// Add your routes here
+
+	log.Println("Server starting on :8080")
+	if err := e.Start(":8080"); err != nil {
+		log.Fatalf("Server failed to start: %v", err)
+	}
+}
+`
+	case "Fiber":
+		return `package main
+
+import (
+	"github.com/gofiber/fiber/v2"
+	"log"
+)
+
+func main() {
+	app := fiber.New()
+
+	app.Get("/health", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"status": "healthy",
+		})
+	})
+
+	// Add your routes here
+
+	log.Println("Server starting on :8080")
+	if err := app.Listen(":8080"); err != nil {
+		log.Fatalf("Server failed to start: %v", err)
+	}
+}
+`
+	case "Chi":
+		return `package main
+
+import (
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"log"
+	"net/http"
+)
+
+func main() {
+	r := chi.NewRouter()
+
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+
+	r.Get("/health", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte("{\"status\":\"healthy\"}"))
+	})
+
+	// Add your routes here
+
+	log.Println("Server starting on :8080")
+	if err := http.ListenAndServe(":8080", r); err != nil {
+		log.Fatalf("Server failed to start: %v", err)
+	}
+}
+`
+	default:
+		return `package main
+
+import (
+	"log"
+	"net/http"
+)
+
+func main() {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte("{\"status\":\"healthy\"}"))
+	})
+
+	// Add your routes here
+
+	log.Println("Server starting on :8080")
+	if err := http.ListenAndServe(":8080", mux); err != nil {
+		log.Fatalf("Server failed to start: %v", err)
+	}
+}
+`
+	}
+}
+
+func generateWorkerMainContent() string {
+	return `package main
+
+import (
+	"log"
+	"time"
+)
+
+func main() {
+	log.Println("Worker started")
+
+	// Add your worker logic here
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			log.Println("Worker tick")
+			// Process your tasks here
+		}
+	}
+}
+`
 }

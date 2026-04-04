@@ -4,6 +4,7 @@ Copyright © 2026 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	tea "charm.land/bubbletea/v2"
@@ -34,8 +35,10 @@ Examples:
   gostart init --framework Gin --database PostgreSQL --sql GORM
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Launch interactive TUI if no CLI args provided
-		if len(args) == 0 {
+		// Launch interactive TUI if no CLI args provided and no flags are set (flags have defaults)
+		useTUI := len(args) == 0 && FrameWork == "None" && DB == "None" && SQL == "None"
+
+		if useTUI {
 			p := tea.NewProgram(tui.InitialModel())
 			result, err := p.Run()
 			if err != nil {
@@ -53,8 +56,18 @@ Examples:
 			DB = m.Databases[m.SelectedDatabase].Name
 			SQL = m.SqlDrivers[m.SelectedSQL].Name
 		} else {
-			ProjectName = args[0]
+			// CLI mode - use args[0] as project name if provided, otherwise use ProjectName from flags
+			if len(args) > 0 {
+				ProjectName = args[0]
+			}
+			if ProjectName == "" {
+				log.Fatalf("Project name is required. Use: gostart init <project-name> or run interactively with 'gostart init'")
+			}
 		}
+
+		fmt.Printf("Creating project: %s\n", ProjectName)
+		fmt.Printf("Framework: %s, Database: %s, SQL Driver: %s\n", FrameWork, DB, SQL)
+
 		if err := work.CreateProjectStructure(ProjectName, FrameWork, DB, SQL); err != nil {
 			log.Fatalf("Failed to create project: %v", err)
 		}
