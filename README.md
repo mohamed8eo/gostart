@@ -3,6 +3,9 @@
 > Bootstrap Go projects in seconds. Search and install packages without leaving your terminal.
 
 ---
+![gostart-demo](https://github.com/user-attachments/assets/fb022f6c-9844-4ded-97a6-ad812847d79b)
+
+
 
 ## The Problem
 
