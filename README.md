@@ -128,11 +128,28 @@ This launches an interactive search where you can:
 - Select packages to install with a single keystroke
 - Add multiple packages to a queue and install them all at once
 
-**Pro Tip:** Set a `GITHUB_TOKEN` environment variable for higher API rate limits:
+**Required:** This tool requires a GitHub personal access token to search for packages.
 
+**Setting up your GitHub Token:**
+
+1. Go to [github.com/settings/tokens/new](https://github.com/settings/tokens/new)
+2. Fill in:
+   - **Note:** `gostart-cli`
+   - **Expiration:** No expiration
+   - **Scopes:** select nothing — zero scopes needed, public search works without any
+3. Click **Generate token** and copy it
+4. Add it to your shell config so it's always available:
+
+**Fish:**
 ```bash
-export GITHUB_TOKEN=your_token_here
-gostart add
+echo 'set -x GITHUB_TOKEN "your_token_here"' >> ~/.config/fish/config.fish
+source ~/.config/fish/config.fish
+```
+
+**Bash/Zsh:**
+```bash
+echo 'export GITHUB_TOKEN="your_token_here"' >> ~/.bashrc
+source ~/.bashrc
 ```
 
 ---
